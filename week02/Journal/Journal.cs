@@ -25,27 +25,33 @@ public class Journal
     }
 
     public void SaveToFile(string filename)
+{
+    using (StreamWriter outputFile = new StreamWriter(filename))
     {
-        using (StreamWriter outputFile = new StreamWriter(filename))
+        foreach (var entry in entries)
         {
-            foreach (var entry in entries)
-            {
-                outputFile.WriteLine($"{entry.Date}|{entry.Prompt}|{entry.Response}");
-            }
+            // Escape quotes and commas in the content
+            string escapedPrompt = entry.Prompt.Replace("\"", "\"\"");
+            string escapedResponse = entry.Response.Replace("\"", "\"\"");
+            outputFile.WriteLine($"\"{entry.Date}\",\"{escapedPrompt}\",\"{escapedResponse}\"");
         }
     }
+}
 
-    public void LoadFromFile(string filename)
+public void LoadFromFile(string filename)
+{
+    entries.Clear();
+    string[] lines = File.ReadAllLines(filename);
+    foreach (var line in lines)
     {
-        entries.Clear();
-        string[] lines = File.ReadAllLines(filename);
-        foreach (var line in lines)
+        string[] parts = line.Split(new[] { "\",\"" }, StringSplitOptions.None);
+        if (parts.Length == 3)
         {
-            string[] parts = line.Split('|');
-            if (parts.Length == 3)
-            {
-                entries.Add(new Entry(parts[0], parts[1], parts[2]));
-            }
+            string date = parts[0].Trim('"');
+            string prompt = parts[1].Trim('"');
+            string response = parts[2].Trim('"');
+            entries.Add(new Entry(date, prompt, response));
         }
     }
+}
 }
