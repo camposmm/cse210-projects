@@ -5,10 +5,12 @@ using System.IO;
 public class Journal
 {
     private List<Entry> entries;
+    private string password;
 
     public Journal()
     {
         entries = new List<Entry>();
+        password = "journal123"; // Default password
     }
 
     public void AddEntry(Entry entry)
@@ -30,13 +32,15 @@ public class Journal
         {
             foreach (var entry in entries)
             {
-                // Escape quotes and commas in the content
                 string escapedPrompt = entry.Prompt.Replace("\"", "\"\"");
                 string escapedResponse = entry.Response.Replace("\"", "\"\"");
-                outputFile.WriteLine($"\"{entry.Date}\",\"{escapedPrompt}\",\"{escapedResponse}\"");
+                outputFile.WriteLine($"\"{entry.Date}\",\"{escapedPrompt}\",\"{escapedResponse}\",{entry.Mood}");
             }
         }
         Console.WriteLine("Journal saved successfully!");
+
+        // Create a backup
+        CreateBackup(filename);
     }
 
     public void LoadFromFile(string filename)
@@ -46,12 +50,13 @@ public class Journal
         foreach (var line in lines)
         {
             string[] parts = line.Split(new[] { "\",\"" }, StringSplitOptions.None);
-            if (parts.Length == 3)
+            if (parts.Length == 4)
             {
                 string date = parts[0].Trim('"');
                 string prompt = parts[1].Trim('"');
                 string response = parts[2].Trim('"');
-                entries.Add(new Entry(date, prompt, response));
+                int mood = int.Parse(parts[3].Trim('"'));
+                entries.Add(new Entry(date, prompt, response, mood));
             }
         }
         Console.WriteLine("Journal loaded successfully!");
@@ -73,5 +78,22 @@ public class Journal
         {
             Console.WriteLine("No matching entries found.");
         }
+    }
+
+    private void CreateBackup(string filename)
+    {
+        string backupFolder = "Backups";
+        if (!Directory.Exists(backupFolder))
+        {
+            Directory.CreateDirectory(backupFolder);
+        }
+        string backupFile = Path.Combine(backupFolder, $"backup_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+        File.Copy(filename, backupFile, true);
+        Console.WriteLine($"Backup created: {backupFile}");
+    }
+
+    public bool CheckPassword(string inputPassword)
+    {
+        return inputPassword == password;
     }
 }
