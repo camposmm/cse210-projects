@@ -28,7 +28,10 @@ public class ChecklistGoal : Goal
 
     public override string GetDetailsString()
     {
-        return base.GetDetailsString() + $" -- Currently completed: {_amountCompleted}/{_target}";
+        string baseString = base.GetDetailsString();
+        string progress = $"{_amountCompleted}/{_target}";
+        string progressBar = GetProgressBar(_amountCompleted, _target);
+        return $"{baseString} {progressBar} {progress} (Bonus: {_bonus})";
     }
 
     public override string GetStringRepresentation()
